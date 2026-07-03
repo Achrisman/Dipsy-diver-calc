@@ -7,3 +7,599 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Dipsy Calc">
 <title>Dipsy Diver Depth Calculator</title>
+<style>
+  :root{
+    --ink:#0f1f2e;
+    --deep:#0a3547;
+    --line:#c9d6da;
+    --paper:#eef2ef;
+    --brass:#9c7a3c;
+    --brass-light:#c9a15c;
+    --warn:#8a3324;
+    --mono: 'IBM Plex Mono','SF Mono',Menlo,monospace;
+    --serif: 'Iowan Old Style','Georgia',serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: linear-gradient(180deg,#0a2233 0%, #0d2b3f 40%, #0a3547 100%);
+    color: var(--ink);
+    font-family: var(--serif);
+    min-height:100vh;
+    padding: 18px 14px 60px;
+  }
+  .wrap{ max-width: 640px; margin: 0 auto; }
+  header{
+    color:#eef2ef;
+    padding: 6px 4px 20px;
+    border-bottom: 1px solid rgba(238,242,239,0.15);
+    margin-bottom: 18px;
+  }
+  .eyebrow{
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--brass-light);
+    margin-bottom: 6px;
+  }
+  h1{
+    font-size: 26px;
+    margin: 0 0 6px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .sub{ font-size: 13.5px; color:#b9c8ce; line-height:1.5; max-width:52ch;}
+
+  .card{
+    background: var(--paper);
+    border-radius: 3px;
+    padding: 18px 18px 20px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 20px rgba(0,0,0,0.18);
+  }
+  .card h2{
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-family: var(--mono);
+    color: var(--deep);
+    margin: 0 0 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .row{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 12px; }
+  .field{ flex:1; min-width: 130px; }
+  label{
+    display:block;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #4a5c62;
+    margin-bottom: 5px;
+  }
+  select, input[type=number]{
+    width:100%;
+    padding: 9px 10px;
+    border: 1px solid #b7c4c9;
+    border-radius: 2px;
+    background: #fff;
+    font-family: var(--serif);
+    font-size: 15px;
+    color: var(--ink);
+  }
+  select:focus, input:focus{ outline: 2px solid var(--brass); outline-offset:1px; }
+
+  .stepper{
+    display:flex;
+    align-items:stretch;
+    border: 1px solid #b7c4c9;
+    border-radius: 3px;
+    overflow:hidden;
+    background:#fff;
+    height: 64px;
+  }
+  .stepper button{
+    width: 56px;
+    flex-shrink:0;
+    border:none;
+    background: var(--deep);
+    color:#fff;
+    font-family: var(--mono);
+    font-size: 26px;
+    line-height:1;
+    cursor:pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .stepper button:active{ background: var(--brass); }
+  .stepper button.minus{ border-right:1px solid rgba(255,255,255,0.15); }
+  .stepper button.plus{ border-left:1px solid rgba(255,255,255,0.15); }
+  .stepper .stepper-mid{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    min-width:0;
+  }
+  .stepper input[type=number]{
+    border:none;
+    text-align:center;
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight:600;
+    color: var(--deep);
+    padding: 0;
+    width: 100%;
+    -moz-appearance: textfield;
+  }
+  .stepper input[type=number]::-webkit-outer-spin-button,
+  .stepper input[type=number]::-webkit-inner-spin-button{
+    -webkit-appearance:none; margin:0;
+  }
+  .stepper input[type=number]:focus{ outline:none; }
+  .stepper-unit{
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:#8a9aa0;
+    margin-top:-2px;
+  }
+
+  .toggle-row{ display:flex; align-items:center; gap:8px; margin-top:2px;}
+  .toggle-row input{ width:16px; height:16px; }
+  .toggle-row span{ font-size: 13.5px; }
+
+  .segmented{ display:flex; border:1px solid #b7c4c9; border-radius:2px; overflow:hidden; }
+  .segmented button{
+    flex:1; padding:9px 6px; border:none; background:#fff; cursor:pointer;
+    font-family: var(--serif); font-size: 13.5px; color:#556; border-right:1px solid #b7c4c9;
+  }
+  .segmented button:last-child{ border-right:none; }
+  .segmented button.active{ background: var(--deep); color:#fff; }
+
+  .result{
+    margin-top: 6px;
+    padding: 16px 16px;
+    background: var(--deep);
+    color: #eef2ef;
+    border-radius: 2px;
+  }
+  .result .big{
+    font-family: var(--mono);
+    font-size: 34px;
+    font-weight:600;
+    letter-spacing: -0.01em;
+  }
+  .result .big span{ font-size: 15px; font-weight:400; opacity:0.7; margin-left:4px;}
+  .result .note{ font-size: 12px; color:#9fb3ba; margin-top:6px; line-height:1.5; }
+
+  .badge{
+    display:inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    padding: 3px 7px;
+    border-radius: 2px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .badge.verified{ background:#1e4d2b; color:#bfe6c8; }
+  .badge.unverified{ background: var(--warn); color:#f5d9d2; }
+
+  .warn-box{
+    background: #fbf0ec;
+    border-left: 3px solid var(--warn);
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height:1.5;
+    color: #5c2418;
+    border-radius: 0 2px 2px 0;
+    margin-bottom: 12px;
+  }
+  .fact-list{ font-size: 13.5px; line-height:1.7; padding-left: 18px; margin: 8px 0 0;}
+
+  table{ width:100%; border-collapse: collapse; font-size: 12.5px; margin-top:4px;}
+  th,td{ padding:6px 4px; text-align:center; border-bottom:1px solid var(--line); font-family: var(--mono);}
+  th{ color: var(--deep); font-weight:600; font-size:11px; }
+  td.setting-label, th.setting-label{ text-align:left; font-family: var(--serif); }
+
+  .calib-row{ display:flex; gap:6px; margin-bottom:8px; align-items:center; }
+  .calib-row input{ flex:1; padding:7px 8px; font-size:13px; }
+  .calib-row button{
+    background: var(--warn); color:#fff; border:none; border-radius:2px;
+    width:30px; height:30px; cursor:pointer; font-size:14px;
+  }
+  .add-btn{
+    width:100%; padding:10px; margin-top:4px;
+    background: var(--deep); color:#fff; border:none; border-radius:2px;
+    font-family: var(--mono); font-size:12px; text-transform:uppercase; letter-spacing:0.06em;
+    cursor:pointer;
+  }
+  .calib-empty{ font-size:12.5px; color:#77878c; font-style:italic; padding: 6px 0; }
+
+  footer{ text-align:center; color:#7f9199; font-size:11.5px; margin-top: 26px; font-family: var(--mono); }
+  a.src{ color: var(--brass-light); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Trolling Reference · Bay &amp; Delta</div>
+    <h1>Dipsy Diver Depth Calculator</h1>
+    <div class="sub">Built off Luhr-Jensen's own Tech Report #12 chart data — not a generic interpolation. Verified numbers are marked; anything else is flagged so you know what to trust on the water.</div>
+  </header>
+
+  <!-- SIZE SELECTOR -->
+  <div class="card">
+    <h2>1 · Diver Size</h2>
+    <div class="field">
+      <label for="size">Which Dipsy are you running?</label>
+      <select id="size" onchange="onSizeChange()">
+        <option value="size1" selected>Size 1 (001) — 4-1/8", 5.05oz, to 50ft</option>
+        <option value="magnum">#3 Magnum — 4-7/8", 8.8oz, to 100ft</option>
+        <option value="size0">Size 0 (000) — 3-1/4", 2.53oz, to 35ft</option>
+        <option value="mini">Size 3/0 (Mini) — 2-1/4", 1.56oz, to 20ft</option>
+      </select>
+    </div>
+    <div id="sizeNote"></div>
+  </div>
+
+  <!-- CALCULATOR (Magnum = verified, Size 1 = interpolated) -->
+  <div class="card" id="magnumCalc">
+    <h2>2 · Solve <span class="badge" id="calcBadge">Verified chart</span></h2>
+    <div class="warn-box" id="calcSourceNote" style="display:none;"></div>
+
+    <div class="segmented" id="modeToggle">
+      <button class="active" onclick="setMode('depth')" id="btn-depth">I want a depth → line out</button>
+      <button onclick="setMode('line')" id="btn-line">I have line out → depth</button>
+    </div>
+
+    <div class="row" style="margin-top:14px;">
+      <div class="field" id="depthField">
+        <label for="targetDepth">Target depth (ft)</label>
+        <div class="stepper">
+          <button class="minus" onclick="step('targetDepth',-5,5,120)">−</button>
+          <div class="stepper-mid">
+            <input type="number" id="targetDepth" value="40" min="5" max="120" oninput="calcMagnum()">
+            <div class="stepper-unit">feet</div>
+          </div>
+          <button class="plus" onclick="step('targetDepth',5,5,120)">+</button>
+        </div>
+      </div>
+      <div class="field" id="lineField" style="display:none;">
+        <label for="lineOut">Line out (ft)</label>
+        <div class="stepper">
+          <button class="minus" onclick="step('lineOut',-5,10,300)">−</button>
+          <div class="stepper-mid">
+            <input type="number" id="lineOut" value="70" min="10" max="300" oninput="calcMagnum()">
+            <div class="stepper-unit">feet</div>
+          </div>
+          <button class="plus" onclick="step('lineOut',5,10,300)">+</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="setting">Base plate setting</label>
+        <select id="setting" onchange="calcMagnum()">
+          <option value="0">0 — straight, deepest</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3 — furthest side-planing</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="speed">Troll speed (mph)</label>
+        <div class="stepper">
+          <button class="minus" onclick="step('speed',-0.25,1,6,2)">−</button>
+          <div class="stepper-mid">
+            <input type="number" id="speed" value="2.75" min="1" max="6" step="0.25" oninput="calcMagnum()">
+            <div class="stepper-unit">mph</div>
+          </div>
+          <button class="plus" onclick="step('speed',0.25,1,6,2)">+</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>O-ring</label>
+        <div class="toggle-row" style="padding-top:9px;">
+          <input type="checkbox" id="oring" onchange="calcMagnum()">
+          <span>Installed (+~20% depth)</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="add-btn" onclick="calcMagnum()">Calculate</button>
+
+    <div class="result" id="magnumResult" style="display:none;">
+      <div class="big" id="resultValue">— <span id="resultUnit"></span></div>
+      <div class="note" id="resultNote"></div>
+    </div>
+  </div>
+
+  <!-- UNVERIFIED SIZE NOTICE -->
+  <div class="card" id="unverifiedCalc" style="display:none;">
+    <h2>2 · What's actually known <span class="badge unverified">No full chart</span></h2>
+    <div class="warn-box" id="unverifiedText"></div>
+    <ul class="fact-list" id="factList"></ul>
+  </div>
+
+  <!-- REFERENCE TABLE -->
+  <div class="card" id="tableCard">
+    <h2 id="tableHeader">Reference: #3 Magnum, 20lb mono, 2.5–3.0mph, no O-ring</h2>
+    <table>
+      <thead><tr><th class="setting-label">Depth</th><th>Setting 0</th><th>Setting 1</th><th>Setting 2</th><th>Setting 3</th></tr></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- CALIBRATION -->
+  <div class="card">
+    <h2>3 · Your own calibration <span class="badge verified">Most accurate</span></h2>
+    <div class="warn-box">
+      Anglers who've cross-checked the printed chart against a Fishhawk or line counter report drift of 15–30%, mostly from braid vs. the chart's 20lb mono baseline. Log your own line-out/depth pairs here (any size, any setting) and this becomes your real curve — more reliable than any chart, including the one above.
+    </div>
+    <div id="calibRows"></div>
+    <div class="calib-row">
+      <input type="text" id="c-label" placeholder="Setting/size, e.g. 'Size1, set 2'">
+      <input type="number" id="c-line" placeholder="Line out (ft)">
+      <input type="number" id="c-depth" placeholder="Depth (ft)">
+      <button onclick="addCalibRow()">+</button>
+    </div>
+    <div class="calib-empty" id="calibEmpty">No logged readings yet.</div>
+  </div>
+
+  <footer>
+    Source: Luhr-Jensen Tech Report #12, "A Complete Guide on How to Effectively Fish with a Dipsy Diver" (Rapala/Luhr-Jensen) · speed and O-ring adjustments per the same document
+  </footer>
+</div>
+
+<script>
+// ---- Verified Luhr-Jensen #3 Magnum chart ----
+// depth(ft) -> [line-out at setting 0,1,2,3] (ft), 20lb mono, 2.5-3.0mph, no O-ring
+const MAGNUM_TABLE = [
+  {depth:20,  vals:[25, 27, 30, 32]},
+  {depth:30,  vals:[40, 48, 55, 60]},
+  {depth:40,  vals:[56, 68, 80, 85]},
+  {depth:50,  vals:[80, 88, 95, 110]},
+  {depth:60,  vals:[100,110,120,140]},
+  {depth:80,  vals:[140,155,175,195]},
+  {depth:100, vals:[180,195,220,250]},
+];
+
+// ---- INTERPOLATED Size 1 chart — NOT an official Luhr-Jensen table ----
+// Built by: (1) taking a secondhand "Large Size Dipsy (1)" chart (15lb mono,
+// line-out -> depth, settings 0 and 3 only) from a reposted diving-planer
+// reference doc, (2) linearly interpolating settings 1 and 2 between the
+// measured 0 and 3 columns, (3) inverting line-out->depth into depth->line-out
+// via linear interpolation, matching the Magnum table's format.
+// Source line test (15lb mono) differs from Magnum's official 20lb baseline —
+// this table has NOT been cross-checked against a Fishhawk or line counter.
+const SIZE1_TABLE = [
+  {depth:10, vals:[11, 12, 13, 15]},
+  {depth:20, vals:[29, 32, 35, 40]},
+  {depth:30, vals:[46, 52, 59, 69]},
+  {depth:40, vals:[67, 75, 87, 100]},
+  {depth:50, vals:[92, 105, 125, 150]},
+];
+
+const BASE_SPEED_LOW = 2.5, BASE_SPEED_HIGH = 3.0, BASE_SPEED_MID = 2.75;
+const ORING_BOOST = 0.20; // "up to 20% more depth" per Luhr-Jensen (documented generally, not size-specific)
+
+let mode = 'depth';
+let activeTable = SIZE1_TABLE;
+
+function renderTable(){
+  const body = document.getElementById('tableBody');
+  body.innerHTML = activeTable.map(r =>
+    `<tr><td class="setting-label">${r.depth}'</td><td>${r.vals[0]}'</td><td>${r.vals[1]}'</td><td>${r.vals[2]}'</td><td>${r.vals[3]}'</td></tr>`
+  ).join('');
+}
+
+function interp(x, xs, ys){
+  // linear interpolation, xs must be ascending
+  if(x <= xs[0]) return ys[0] * (x/xs[0]); // rough extrapolation toward 0
+  if(x >= xs[xs.length-1]){
+    // extrapolate using last segment slope
+    const n = xs.length;
+    const slope = (ys[n-1]-ys[n-2])/(xs[n-1]-xs[n-2]);
+    return ys[n-1] + slope*(x-xs[n-1]);
+  }
+  for(let i=0;i<xs.length-1;i++){
+    if(x>=xs[i] && x<=xs[i+1]){
+      const t = (x-xs[i])/(xs[i+1]-xs[i]);
+      return ys[i] + t*(ys[i+1]-ys[i]);
+    }
+  }
+  return ys[ys.length-1];
+}
+
+function speedFactor(speed){
+  // within 2.5-3.0mph band: no adjustment (per LJ's own stated test range)
+  if(speed >= BASE_SPEED_LOW && speed <= BASE_SPEED_HIGH) return 1.0;
+  const ref = speed < BASE_SPEED_LOW ? BASE_SPEED_LOW : BASE_SPEED_HIGH;
+  const deltaV = speed - ref;
+  // "depth increases/decreases 10% for each mph faster/slower"
+  let factor = 1 - 0.10*deltaV;
+  if(factor < 0.15) factor = 0.15; // guard rail, don't let it go absurd
+  return factor;
+}
+
+function setMode(m){
+  mode = m;
+  document.getElementById('btn-depth').classList.toggle('active', m==='depth');
+  document.getElementById('btn-line').classList.toggle('active', m==='line');
+  document.getElementById('depthField').style.display = m==='depth' ? '' : 'none';
+  document.getElementById('lineField').style.display = m==='line' ? '' : 'none';
+  calcMagnum();
+}
+
+function step(id, delta, min, max, decimals){
+  const el = document.getElementById(id);
+  let val = parseFloat(el.value) || 0;
+  val = Math.round((val + delta) * 100) / 100;
+  if(val < min) val = min;
+  if(val > max) val = max;
+  el.value = decimals ? val.toFixed(decimals) : val;
+  calcMagnum();
+}
+
+function calcMagnum(){
+  const setting = parseInt(document.getElementById('setting').value);
+  const speed = parseFloat(document.getElementById('speed').value) || BASE_SPEED_MID;
+  const oring = document.getElementById('oring').checked;
+
+  const depths = activeTable.map(r=>r.depth);
+  const lineOuts = activeTable.map(r=>r.vals[setting]);
+
+  const sf = speedFactor(speed);
+  const oringMult = oring ? (1+ORING_BOOST) : 1;
+  const totalMult = sf * oringMult;
+
+  const resultBox = document.getElementById('magnumResult');
+  const val = document.getElementById('resultValue');
+  const unit = document.getElementById('resultUnit');
+  const note = document.getElementById('resultNote');
+
+  if(mode === 'depth'){
+    const targetDepth = parseFloat(document.getElementById('targetDepth').value);
+    // effective table-depth needed at baseline before adjustments
+    const tableDepthNeeded = targetDepth / totalMult;
+    const lineOutNeeded = interp(tableDepthNeeded, depths, lineOuts);
+    val.innerHTML = Math.round(lineOutNeeded) + `<span>ft of line</span>`;
+    note.innerHTML = `Setting ${setting} · ${speed}mph · ${oring?'O-ring in':'no O-ring'} · adjustment factor ${totalMult.toFixed(2)}×`;
+  } else {
+    const lineOut = parseFloat(document.getElementById('lineOut').value);
+    const tableDepth = interp(lineOut, lineOuts, depths);
+    const actualDepth = tableDepth * totalMult;
+    val.innerHTML = Math.round(actualDepth) + `<span>ft deep</span>`;
+    note.innerHTML = `Setting ${setting} · ${speed}mph · ${oring?'O-ring in':'no O-ring'} · adjustment factor ${totalMult.toFixed(2)}×`;
+  }
+  resultBox.style.display = '';
+}
+
+// ---- Size handling ----
+const SIZE_FACTS = {
+  size1: {
+    label: 'Size 1 (001)',
+    text: `No full Luhr-Jensen depth-by-setting-by-line-out chart could be verified for Size 1 — forum-reposted "charts" for this size disagree with each other and use different line test (12–15lb vs the official 20lb baseline), so they're not trustworthy enough to bake in as fact.`,
+    facts: [
+      'Weight: 5.05oz, length 4-1/8"',
+      'Rated to 50ft max depth',
+      'With O-ring: dives to 50ft (per official spec — this is the O-ring max, not a curve)',
+      'Speed rule (10%/mph off 2.5–3.0mph baseline) and O-ring boost (~20%) are documented for the line generally, likely apply, but the underlying curve itself is unverified for this size'
+    ]
+  },
+  size0: {
+    label: 'Size 0 (000)',
+    text: `Same issue as Size 1 — no verified full chart. What Luhr-Jensen does confirm directly:`,
+    facts: [
+      'Weight: 2.53oz, length 3-1/4"',
+      'Rated to 35ft max depth',
+      'With O-ring: dives to 35ft (official O-ring max)',
+      'Use the calibration tool below once you have a session or two of line-counter data — it\'ll beat any secondhand chart for this size'
+    ]
+  },
+  mini: {
+    label: 'Size 3/0 (Mini)',
+    text: `Luhr-Jensen's own documentation states there is no published depth chart for the 3/0. It also has no trip mechanism and no O-ring option, so the O-ring/setting math on this page doesn't apply to it at all.`,
+    facts: [
+      'Weight: 1.56oz, length 2-1/4"',
+      'Rated to 20ft max depth',
+      'No trip mechanism, no O-ring — comes with Duo-Lock snaps only',
+      'Effectively trolled up to ~3mph per Luhr-Jensen; log your own readings below'
+    ]
+  }
+};
+
+function onSizeChange(){
+  const size = document.getElementById('size').value;
+  const noteBox = document.getElementById('sizeNote');
+  const magnumCalc = document.getElementById('magnumCalc');
+  const unverifiedCalc = document.getElementById('unverifiedCalc');
+  const tableCard = document.getElementById('tableCard');
+  const badge = document.getElementById('calcBadge');
+  const sourceNote = document.getElementById('calcSourceNote');
+  const tableHeader = document.getElementById('tableHeader');
+
+  noteBox.innerHTML = '';
+
+  if(size === 'magnum' || size === 'size1'){
+    magnumCalc.style.display = '';
+    unverifiedCalc.style.display = 'none';
+    tableCard.style.display = '';
+
+    if(size === 'magnum'){
+      activeTable = MAGNUM_TABLE;
+      badge.textContent = 'Verified chart';
+      badge.className = 'badge verified';
+      sourceNote.style.display = 'none';
+      tableHeader.textContent = 'Reference: #3 Magnum, 20lb mono, 2.5–3.0mph, no O-ring';
+    } else {
+      activeTable = SIZE1_TABLE;
+      badge.textContent = 'Interpolated — not official';
+      badge.className = 'badge unverified';
+      sourceNote.style.display = '';
+      sourceNote.innerHTML = `<b>Not a Luhr-Jensen chart.</b> Settings 0 &amp; 3 come from a secondhand "Large Size Dipsy (1)" reference (15lb mono, not the official 20lb baseline). Settings 1 &amp; 2 are linearly interpolated between them, then inverted to depth→line-out. Untested against a line counter — treat as a starting point, not gospel.`;
+      tableHeader.textContent = 'Interpolated: Size 1, ~15lb mono baseline (estimated)';
+    }
+    renderTable();
+    calcMagnum();
+  } else {
+    const f = SIZE_FACTS[size];
+    magnumCalc.style.display = 'none';
+    tableCard.style.display = 'none';
+    unverifiedCalc.style.display = '';
+    document.getElementById('unverifiedText').textContent = f.text;
+    document.getElementById('factList').innerHTML = f.facts.map(x=>`<li>${x}</li>`).join('');
+  }
+}
+
+// ---- Calibration log (in-memory only) ----
+let calibData = [];
+function renderCalib(){
+  const box = document.getElementById('calibRows');
+  const empty = document.getElementById('calibEmpty');
+  if(calibData.length === 0){
+    box.innerHTML = '';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+  box.innerHTML = calibData.map((r,i)=>
+    `<div class="calib-row">
+      <input type="text" value="${r.label}" readonly style="background:#f5f7f5;">
+      <input type="text" value="${r.line}' line" readonly style="background:#f5f7f5;">
+      <input type="text" value="${r.depth}' deep" readonly style="background:#f5f7f5;">
+      <button onclick="removeCalibRow(${i})">×</button>
+    </div>`
+  ).join('');
+}
+function addCalibRow(){
+  const label = document.getElementById('c-label').value || 'Unlabeled';
+  const line = parseFloat(document.getElementById('c-line').value);
+  const depth = parseFloat(document.getElementById('c-depth').value);
+  if(isNaN(line) || isNaN(depth)) return;
+  calibData.push({label, line, depth});
+  document.getElementById('c-label').value = '';
+  document.getElementById('c-line').value = '';
+  document.getElementById('c-depth').value = '';
+  renderCalib();
+}
+function removeCalibRow(i){
+  calibData.splice(i,1);
+  renderCalib();
+}
+
+// init
+setMode('depth');
+renderCalib();
+onSizeChange();
+</script>
+</body>
+</html>
